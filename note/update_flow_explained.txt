@@ -1,0 +1,118 @@
+Luồng cập nhật: Client gọi API → Server cập nhật → Client đồng bộ UI
+=================================================================
+
+Mục tiêu
+- Hiểu rõ cách cập nhật dữ liệu trên Server (PUT) và đồng bộ UI Client.
+- Có ví dụ cụ thể để test bằng Postman, fetch (JS thuần) và React.
+
+1) API cập nhật trên Server (PUT /api/posts/:id)
+- File: src/routers/post.js
+- Ý tưởng: nhận dữ liệu cần sửa từ body, tìm bài theo id, cập nhật từng field nếu có, trả lại đối tượng sau cập nhật.
+
+Code server (trích):
+"""
+// PUT /api/posts/:id - Cập nhật bài viết theo id
+postRouter.put("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const post = posts.find((p) => p.id === id);
+  if (!post) return res.status(404).json({ error: "Post not found" });
+
+  const { title, content } = req.body || {};
+  post.title = title ?? post.title;
+  post.content = content ?? post.content;
+
+  return res.json(post);
+});
+"""
+Giải thích:
+- Lấy id từ URL params, ép Number để so sánh.
+- Tìm bài viết trong mảng. Không thấy → 404.
+- Lấy dữ liệu từ body (title, content). Dùng toán tử nullish coalescing (??) để chỉ thay field khi client gửi lên.
+- Trả về đối tượng mới sau cập nhật (HTTP 200). Đây là dữ liệu “chuẩn” để client đồng bộ UI.
+
+2) Gọi API bằng Postman (cách test nhanh)
+- Endpoint: PUT http://localhost:3000/api/posts/1
+- Headers: Content-Type: application/json
+- Body (raw JSON):
+{
+  "title": "Tiêu đề đã cập nhật"
+}
+Kết quả mong đợi:
+- 200 OK + JSON bài viết sau cập nhật.
+- Nếu id không tồn tại → 404 { "error": "Post not found" }.
+
+3) Client cập nhật UI sau khi Server trả kết quả
+A) JS thuần (fetch)
+"""
+async function updatePost(id, payload) {
+  const res = await fetch(`http://localhost:3000/api/posts/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Update failed with ${res.status}`);
+  }
+  return res.json();
+}
+
+// Cập nhật UI với dữ liệu server trả về
+async function onSaveTitle(id, newTitle) {
+  try {
+    const updated = await updatePost(id, { title: newTitle });
+    // 1) Nếu có mảng posts hiện có trên client
+    posts = posts.map(p => (p.id === updated.id ? updated : p));
+    render(posts);
+    // 2) Hoặc cập nhật trực tiếp phần tử đang hiển thị bằng "updated"
+  } catch (e) {
+    alert(e.message);
+  }
+}
+"""
+Ghi chú:
+- Luôn ưu tiên dùng dữ liệu trả về từ server (updated) để đảm bảo đồng bộ chính xác.
+
+B) React (useState)
+"""
+function Posts() {
+  const [posts, setPosts] = React.useState([]);
+
+  const updatePost = async (id, payload) => {
+    const res = await fetch(`http://localhost:3000/api/posts/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("Update failed");
+    return res.json();
+  };
+
+  const handleUpdateTitle = async (id, newTitle) => {
+    const updated = await updatePost(id, { title: newTitle });
+    setPosts(prev => prev.map(p => (p.id === updated.id ? updated : p)));
+  };
+
+  // ... JSX hiển thị danh sách và form update gọi handleUpdateTitle
+}
+"""
+
+4) Luồng tổng quát (tóm tắt)
+- Client: gửi PUT /api/posts/:id với body JSON các field muốn sửa.
+- Server: tìm bản ghi → cập nhật → trả lại đối tượng sau cập nhật (200).
+- Client: nhận JSON “updated” → cập nhật state/UI theo đối tượng này.
+
+5) Sai lầm phổ biến & cách tránh
+- Gọi nhầm POST /api/posts/:id (POST không có id). Đúng: POST /api/posts để tạo mới, PUT /api/posts/:id để cập nhật.
+- Body sai key: API yêu cầu "title", "content" (không có "author").
+- Quên Content-Type: application/json → server không parse được req.body.
+- Server chưa chạy đúng cổng (ECONNREFUSED). Kiểm tra npm run dev và log "Server is running on port http://localhost:3000".
+
+6) Mở rộng (tuỳ chọn)
+- Optimistic UI: cập nhật tạm UI trước, nếu server lỗi thì rollback.
+- Validate dữ liệu đầu vào kỹ hơn (trim, min length) trước khi cập nhật.
+- Tách controller/service để dễ bảo trì, thêm middleware xử lý lỗi chung.
+
+Kết luận
+- Luôn coi dữ liệu server trả về sau cập nhật là nguồn “chuẩn”.
+- Dựa vào đối tượng “updated” để đồng bộ state trên client, tránh lệch dữ liệu.

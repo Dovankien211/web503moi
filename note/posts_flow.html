@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sơ đồ trình tự CRUD Posts (Chi tiết)</title>
+  <style>
+    :root {
+      --bg: #0f172a; --panel: #111827; --box: #1f2937; --text: #e5e7eb; --muted: #9ca3af;
+      --accent: #22d3ee; --arrow: #94a3b8; --ok: #34d399; --warn: #f59e0b; --err: #ef4444; --purple:#a78bfa;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    h1 { font-size: 20px; margin: 0 0 16px; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    .panel { background: var(--panel); border-radius: 12px; padding: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset; }
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: 13px; }
+    .legend span { display: inline-flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    .grid { display: grid; gap: 12px; }
+    .lane-title { color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+    .lane { display: grid; grid-template-columns: 200px 54px 1fr 54px 240px; gap: 10px 10px; align-items: center; }
+
+    .box { background: var(--box); border-radius: 10px; padding: 12px; border: 1px solid rgba(255,255,255,0.06); }
+    .box .title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .box .desc { color: var(--muted); font-size: 13px; line-height: 1.4; }
+
+    .arrow { height: 2px; background: linear-gradient(90deg, var(--arrow), transparent 70%); position: relative; }
+    .arrow::after { content: ""; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 6px solid var(--arrow); border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+
+    .stack { display: grid; gap: 10px; }
+    .badge { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+
+    .http { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+    .method { font-weight: 800; color: var(--accent); }
+    .method.alt { color: var(--purple); }
+    .status.ok { color: var(--ok); font-weight: 700; }
+    .status.warn { color: var(--warn); font-weight: 700; }
+    .status.err { color: var(--err); font-weight: 700; }
+
+    .code { background: #0b1020; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #cbd5e1; font-size: 12.5px; }
+    .mt8 { margin-top: 8px; }
+
+    .files { display: grid; gap: 10px; grid-template-columns: repeat( auto-fit, minmax(260px, 1fr) ); }
+    @media (max-width: 980px) { .lane { grid-template-columns: 1fr; } .arrow { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Sơ đồ trình tự xử lý (chi tiết) và vai trò các file trong src</h1>
+    <div class="legend">
+      <span><span class="dot" style="background: var(--accent)"></span> Request/Route</span>
+      <span><span class="dot" style="background: var(--ok)"></span> 2xx OK/Created</span>
+      <span><span class="dot" style="background: var(--warn)"></span> 4xx Client Error</span>
+      <span><span class="dot" style="background: var(--err)"></span> 5xx Server Error</span>
+    </div>
+
+    <div class="panel grid">
+      <div class="lane-title">Luồng chi tiết: Client → App → Middlewares → Router → Handler → Response</div>
+      <div class="lane">
+        <div class="box">
+          <div class="title">Client</div>
+          <div class="desc">Gửi HTTP request tới API</div>
+          <div class="http"><span class="method">GET</span> /api/posts</div>
+          <div class="http"><span class="method">GET</span> /api/posts/:id</div>
+          <div class="http"><span class="method">POST</span> /api/posts</div>
+          <div class="http"><span class="method">PUT</span> /api/posts/:id</div>
+          <div class="http"><span class="method">DELETE</span> /api/posts/:id</div>
+        </div>
+        <div class="arrow"></div>
+        <div class="stack">
+          <div class="box">
+            <div class="title">Express App (src/app.js)</div>
+            <div class="desc">Tạo app, đăng ký middlewares, mount routers</div>
+            <div class="code mt8">import postRouter from "./routers/post";
+import userRouter from "./routers/user";
+import productRouter from "./routers/product";
+
+app.use(morgan("dev"));
+app.use(express.json());
+app.use("/api/posts", postRouter);
+app.use("/api/users", userRouter);
+app.use("/api/products", productRouter);</div>
+          </div>
+          <div class="box">
+            <div class="title">Middlewares</div>
+            <div class="desc">Theo thứ tự: morgan (log) → express.json (parse body)</div>
+            <div class="code mt8">app.use(morgan("dev"));
+app.use(express.json());</div>
+          </div>
+        </div>
+        <div class="arrow"></div>
+        <div class="stack">
+          <div class="box">
+            <div class="title">Router Matching</div>
+            <div class="desc">postRouter nhận các path con sau prefix /api/posts</div>
+            <div class="code mt8">postRouter.get("/", ...)
+postRouter.get("/:id", ...)
+postRouter.post("/", ...)
+postRouter.put("/:id", ...)
+postRouter.delete("/:id", ...)</div>
+          </div>
+          <div class="box">
+            <div class="title">Handler Logic</div>
+            <div class="desc">Thao tác mảng posts: tìm kiếm theo id, thêm, cập nhật, xóa</div>
+            <div class="code mt8">// Ví dụ: GET detail
+const id = Number(req.params.id);
+const post = posts.find(p => p.id === id);
+if (!post) return res.status(404).json({ error: "Post not found" });
+return res.json(post);</div>
+          </div>
+        </div>
+        <div class="arrow"></div>
+        <div class="box">
+          <div class="title">Response</div>
+          <div class="desc">Trả JSON + HTTP status về Client</div>
+          <div class="http"><span class="status ok">200</span> OK • GET/PUT/DELETE</div>
+          <div class="http"><span class="status ok">201</span> Created • POST</div>
+          <div class="http"><span class="status warn">400</span> Bad Request • thiếu field</div>
+          <div class="http"><span class="status warn">404</span> Not Found • sai id</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <div class="lane-title">Mỗi endpoint (ví dụ minh họa code)</div>
+      <div class="grid">
+        <div class="box">
+          <div class="title">GET /api/posts</div>
+          <div class="desc">Trả toàn bộ danh sách</div>
+          <div class="code mt8">postRouter.get("/", (req, res) => {
+  return res.json(posts); // 200
+});</div>
+        </div>
+        <div class="box">
+          <div class="title">GET /api/posts/:id</div>
+          <div class="desc">Tìm theo id, không có → 404</div>
+          <div class="code mt8">postRouter.get("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const post = posts.find((p) => p.id === id);
+  if (!post) return res.status(404).json({ error: "Post not found" });
+  return res.json(post);
+});</div>
+        </div>
+        <div class="box">
+          <div class="title">POST /api/posts</div>
+          <div class="desc">Validate body đơn giản, tạo id bằng Date.now()</div>
+          <div class="code mt8">postRouter.post("/", (req, res) => {
+  const { title, content } = req.body || {};
+  if (!title || !content) {
+    return res.status(400).json({ error: "Title and content are required" });
+  }
+  const newPost = { id: Date.now(), title, content };
+  posts.push(newPost);
+  return res.status(201).json(newPost);
+});</div>
+        </div>
+        <div class="box">
+          <div class="title">PUT /api/posts/:id</div>
+          <div class="desc">Cập nhật chọn lọc field gửi lên</div>
+          <div class="code mt8">postRouter.put("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const post = posts.find((p) => p.id === id);
+  if (!post) return res.status(404).json({ error: "Post not found" });
+  const { title, content } = req.body || {};
+  post.title = title ?? post.title;
+  post.content = content ?? post.content;
+  return res.json(post);
+});</div>
+        </div>
+        <div class="box">
+          <div class="title">DELETE /api/posts/:id</div>
+          <div class="desc">Xóa theo index tìm được</div>
+          <div class="code mt8">postRouter.delete("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = posts.findIndex((p) => p.id === id);
+  if (index === -1) return res.status(404).json({ error: "Post not found" });
+  posts.splice(index, 1);
+  return res.json({ success: true });
+});</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <div class="lane-title">Vai trò các file trong src</div>
+      <div class="files">
+        <div class="box">
+          <div class="title">src/app.js</div>
+          <div class="desc">Điểm khởi đầu của ứng dụng Express:
+            - Tạo app, đăng ký middlewares morgan + express.json.
+            - Định nghĩa route gốc "/" để test nhanh.
+            - Mount routers: /api/posts, /api/users, /api/products.
+            - Lắng nghe cổng 3000.</div>
+        </div>
+        <div class="box">
+          <div class="title">src/routers/post.js</div>
+          <div class="desc">Định nghĩa nhóm endpoint cho tài nguyên Posts:
+            - Dữ liệu giả mảng posts.
+            - CRUD: GET list, GET detail, POST create, PUT update, DELETE remove.
+            - Trả JSON + HTTP status phù hợp.</div>
+        </div>
+        <div class="box">
+          <div class="title">src/routers/user.js</div>
+          <div class="desc">Ví dụ router đơn giản cho Users:
+            - GET /api/users → trả chuỗi "user".
+            - GET /api/users/greet → trả chuỗi "user greet".
+            - Minh họa cách tổ chức router độc lập.</div>
+        </div>
+        <div class="box">
+          <div class="title">src/routers/product.js</div>
+          <div class="desc">Ví dụ router đơn giản cho Products:
+            - GET /api/products → trả chuỗi "product".
+            - GET /api/products/greet → trả "product greet".
+            - Tương tự users, cho thấy mỗi tài nguyên có router riêng.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
