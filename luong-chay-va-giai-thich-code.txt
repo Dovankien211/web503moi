@@ -1,0 +1,283 @@
+===============================================
+PHÂN TÍCH LUỒNG CHẠY VÀ GIẢI THÍCH CODE
+===============================================
+
+📋 TỔNG QUAN LUỒNG CHẠY:
+1. app.js khởi tạo server Express
+2. Router định tuyến các request đến controller phù hợp
+3. Controller xử lý logic và trả về response
+4. Client nhận response và cập nhật giao diện
+
+===============================================
+📁 FILE: src/app.js - SERVER CHÍNH
+===============================================
+
+Dòng 1: import express from "express";
+→ Import thư viện Express để tạo web server
+
+Dòng 2: import morgan from "morgan";
+→ Import thư viện Morgan để log các HTTP request (hiển thị thông tin request trong console)
+
+Dòng 4-6: Import các router
+import postRouter from "./routers/post";
+import userRouter from "./routers/user";
+import productRouter from "./routers/product";
+→ Import các module router để xử lý các endpoint khác nhau
+
+Dòng 8: const app = express();
+→ Tạo instance của Express application
+
+Dòng 11: app.use(morgan("dev"));
+→ Sử dụng middleware Morgan ở chế độ 'dev' để log request
+→ Khi có request đến, sẽ hiển thị: GET /api/posts 200 15ms
+
+Dòng 14: app.use(express.json());
+→ Middleware tích hợp để parse JSON từ request body
+→ Cho phép đọc dữ liệu JSON từ req.body trong POST/PUT request
+
+Dòng 17-19: Route gốc
+app.get("/", (req, res) => {
+  res.send("Hello, chao cac ban: ");
+});
+→ Xử lý request GET đến "/" (localhost:3000)
+→ Trả về text "Hello, chao cac ban: "
+
+Dòng 21: app.use("/api/posts", postRouter);
+→ Mount postRouter vào đường dẫn "/api/posts"
+→ Tất cả request bắt đầu với "/api/posts" sẽ được chuyển đến postRouter
+
+Dòng 23-25: Tương tự cho user và product
+app.use("/api/users", userRouter);
+app.use("/api/products", productRouter);
+
+Dòng 27-29: Khởi động server
+app.listen(3000, () => {
+  console.log(`Server is running on port http://localhost:3000`);
+});
+→ Server lắng nghe trên port 3000
+→ Hiển thị thông báo khi server đã sẵn sàng
+
+===============================================
+📁 FILE: src/routers/post.js - ĐỊNH TUYẾN
+===============================================
+
+Dòng 1: import { Router } from "express";
+→ Import Router từ Express để tạo router con
+
+Dòng 2-7: Import controllers
+import {
+  getPosts,
+  getPostById,
+  addPost,
+  updatePost,
+  deletePost,
+} from "../controller/postController.js";
+→ Import các function controller từ file postController.js
+
+Dòng 10: const postRouter = Router();
+→ Tạo instance của Router
+
+Dòng 13: postRouter.get("/", getPosts);
+→ Định tuyến GET request đến "/" (tức là "/api/posts") đến function getPosts
+→ Hỗ trợ query parameter: GET /api/posts?search=keyword
+
+Dòng 16: postRouter.get("/:id", getPostById);
+→ Định tuyến GET request với parameter id đến function getPostById
+→ Ví dụ: GET /api/posts/1 sẽ gọi getPostById với req.params.id = "1"
+
+Dòng 19: postRouter.post("/", addPost);
+→ Định tuyến POST request đến "/" (tức là "/api/posts") đến function addPost
+→ Dùng để tạo bài viết mới
+
+Dòng 22: postRouter.put("/:id", updatePost);
+→ Định tuyến PUT request với parameter id đến function updatePost
+→ Dùng để cập nhật bài viết có id tương ứng
+
+Dòng 25: postRouter.delete("/:id", deletePost);
+→ Định tuyến DELETE request với parameter id đến function deletePost
+→ Dùng để xóa bài viết có id tương ứng
+
+Dòng 27: export default postRouter;
+→ Export router để sử dụng trong app.js
+
+===============================================
+📁 FILE: src/controller/postController.js - XỬ LÝ LOGIC
+===============================================
+
+Dòng 1-5: Dữ liệu giả
+let posts = [
+  { id: 1, title: "Bài viết 1", content: "Nội dung bài viết 1" },
+  { id: 2, title: "Bài viết 2", content: "Nội dung bài viết 2" },
+];
+→ Tạo mảng posts làm database giả (thay thế cho database thật)
+
+Dòng 8: export const getPosts = (req, res) => {
+→ Export function getPosts để xử lý GET /api/posts
+
+Dòng 9: try {
+→ Bắt đầu khối try-catch để xử lý lỗi
+
+Dòng 10: const { search } = req.query;
+→ Lấy parameter "search" từ query string
+→ Ví dụ: /api/posts?search=bài → req.query.search = "bài"
+
+Dòng 12: let filteredPosts = posts;
+→ Khởi tạo biến filteredPosts với toàn bộ danh sách posts
+
+Dòng 15-18: Logic tìm kiếm
+if (search) {
+  filteredPosts = posts.filter(post => 
+    post.title.toLowerCase().includes(search.toLowerCase())
+  );
+}
+→ Nếu có search parameter:
+  - Chuyển title và search về chữ thường
+  - Lọc posts có title chứa từ khóa search
+
+Dòng 21-26: Xử lý trường hợp không tìm thấy
+if (filteredPosts.length === 0) {
+  return res.status(404).json({ 
+    error: search ? "No posts found matching the search criteria" : "No posts found" 
+  });
+}
+→ Nếu không có posts nào phù hợp, trả về status 404 với thông báo lỗi
+
+Dòng 28: return res.json(filteredPosts);
+→ Trả về danh sách posts đã lọc dưới dạng JSON
+
+Dòng 29-31: Xử lý lỗi
+} catch (error) {
+  return res.status(500).json({ error: "Internal server error" });
+}
+→ Nếu có lỗi xảy ra, trả về status 500
+
+Dòng 35-44: Function getPostById
+export const getPostById = (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const post = posts.find((p) => p.id === id);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    return res.json(post);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+→ Dòng 37: Chuyển req.params.id từ string sang number
+→ Dòng 38: Tìm post có id tương ứng
+→ Dòng 39: Nếu không tìm thấy, trả về 404
+→ Dòng 40: Trả về post tìm được
+
+Dòng 47-60: Function addPost
+export const addPost = (req, res) => {
+  try {
+    const { title, content } = req.body || {};
+    if (!title || !content) {
+      return res.status(400).json({ error: "Title and content are required" });
+    }
+    const nextId = posts.length > 0 ? Math.max(...posts.map((p) => p.id)) + 1 : 1;
+    const newPost = { id: nextId, title, content };
+    posts.push(newPost);
+    return res.status(201).json(newPost);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+→ Dòng 49: Lấy title và content từ request body
+→ Dòng 50-52: Kiểm tra title và content có tồn tại không
+→ Dòng 53: Tính id tiếp theo (id lớn nhất + 1)
+→ Dòng 54: Tạo object post mới
+→ Dòng 55: Thêm vào mảng posts
+→ Dòng 56: Trả về post mới với status 201 (Created)
+
+Dòng 63-76: Function updatePost
+export const updatePost = (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const post = posts.find((p) => p.id === id);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    const { title, content } = req.body || {};
+    post.title = title ?? post.title;
+    post.content = content ?? post.content;
+    return res.json(post);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+→ Dòng 66: Tìm post cần cập nhật
+→ Dòng 70-71: Cập nhật title và content (dùng ?? để giữ giá trị cũ nếu không có giá trị mới)
+→ Dòng 72: Trả về post đã cập nhật
+
+Dòng 79-89: Function deletePost
+export const deletePost = (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const index = posts.findIndex((p) => p.id === id);
+    if (index === -1) return res.status(404).json({ error: "Post not found" });
+    posts.splice(index, 1);
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+→ Dòng 82: Tìm index của post cần xóa
+→ Dòng 83: Nếu không tìm thấy (index = -1), trả về 404
+→ Dòng 84: Xóa post khỏi mảng bằng splice
+→ Dòng 85: Trả về thông báo thành công
+
+===============================================
+🔄 LUỒNG CHẠY CHI TIẾT KHI CALL API
+===============================================
+
+VÍ DỤ: GET /api/posts?search=bài
+
+1. CLIENT gửi request:
+   GET http://localhost:3000/api/posts?search=bài
+
+2. SERVER nhận request (app.js):
+   - Morgan log: GET /api/posts?search=bài 200 5ms
+   - Express parse URL và query parameters
+
+3. ĐỊNH TUYẾN (app.js dòng 21):
+   - URL "/api/posts" match với app.use("/api/posts", postRouter)
+   - Chuyển request đến postRouter
+
+4. ROUTER (post.js dòng 13):
+   - URL "/" (sau khi bỏ "/api/posts") match với postRouter.get("/", getPosts)
+   - Gọi function getPosts
+
+5. CONTROLLER (postController.js):
+   - req.query.search = "bài"
+   - Lọc posts có title chứa "bài"
+   - Trả về JSON response
+
+6. CLIENT nhận response và cập nhật giao diện
+
+===============================================
+📊 CÁC HTTP STATUS CODES SỬ DỤNG
+===============================================
+
+200 - OK: Request thành công
+201 - Created: Tạo mới thành công
+400 - Bad Request: Dữ liệu đầu vào không hợp lệ
+404 - Not Found: Không tìm thấy resource
+500 - Internal Server Error: Lỗi server
+
+===============================================
+🎯 CÁCH TEST API
+===============================================
+
+1. Khởi động server:
+   npm run dev
+
+2. Test các endpoint:
+   - GET /api/posts (lấy tất cả)
+   - GET /api/posts?search=bài (tìm kiếm)
+   - GET /api/posts/1 (lấy theo id)
+   - POST /api/posts (tạo mới)
+   - PUT /api/posts/1 (cập nhật)
+   - DELETE /api/posts/1 (xóa)
+
+3. Sử dụng Postman, Thunder Client, hoặc curl để test
+
+===============================================
