@@ -1,93 +1,123 @@
-// Dữ liệu giả: danh sách bài viết
+// 1. Dữ liệu giả (thay thế database)
 let posts = [
   { id: 1, title: "Bài viết 1", content: "Nội dung bài viết 1" },
   { id: 2, title: "Bài viết 2", content: "Nội dung bài viết 2" },
+  { id: 3, title: "Học Node.js", content: "Hướng dẫn học Node.js từ cơ bản" },
+  { id: 4, title: "Express Framework", content: "Tìm hiểu Express.js cho backend" },
 ];
 
-// GET /api/posts - Lấy danh sách bài viết (có hỗ trợ tìm kiếm)
+// 2. GET /api/posts - Lấy danh sách posts (có tìm kiếm)
 export const getPosts = (req, res) => {
   try {
+    // Lấy từ khóa tìm kiếm từ query
     const { search } = req.query;
     
-    let filteredPosts = posts;
+    let result = posts;
     
-    // Nếu có tham số search, tìm kiếm theo tiêu đề
+    // Nếu có từ khóa tìm kiếm
     if (search) {
-      filteredPosts = posts.filter(post => 
+      result = posts.filter(post => 
         post.title.toLowerCase().includes(search.toLowerCase())
       );
     }
     
-    // Nếu không tìm thấy bài viết nào
-    if (filteredPosts.length === 0) {
+    // Kiểm tra kết quả
+    if (result.length === 0) {
       return res.status(404).json({ 
-        error: search ? "No posts found matching the search criteria" : "No posts found" 
+        error: search ? "Không tìm thấy bài viết phù hợp" : "Không có bài viết nào" 
       });
     }
     
-    return res.json(filteredPosts);
+    // Trả về kết quả
+    res.json(result);
+    
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-// GET /api/posts/:id - Lấy chi tiết bài viết theo id
+// 3. GET /api/posts/:id - Lấy post theo ID
 export const getPostById = (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const post = posts.find((p) => p.id === id);
-    if (!post) return res.status(404).json({ error: "Post not found" });
-    return res.json(post);
+    const id = parseInt(req.params.id);
+    const post = posts.find(p => p.id === id);
+    
+    if (!post) {
+      return res.status(404).json({ error: "Không tìm thấy bài viết" });
+    }
+    
+    res.json(post);
+    
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-// POST /api/posts - Thêm bài viết mới
+// 4. POST /api/posts - Tạo post mới
 export const addPost = (req, res) => {
   try {
-    const { title, content } = req.body || {};
+    const { title, content } = req.body;
+    
+    // Kiểm tra dữ liệu đầu vào
     if (!title || !content) {
-      return res.status(400).json({ error: "Title and content are required" });
+      return res.status(400).json({ 
+        error: "Title và content là bắt buộc" 
+      });
     }
-    const nextId = posts.length > 0 ? Math.max(...posts.map((p) => p.id)) + 1 : 1;
-    const newPost = { id: nextId, title, content };
+    
+    // Tạo ID mới
+    const newId = posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1;
+    
+    // Tạo post mới
+    const newPost = { id: newId, title, content };
     posts.push(newPost);
-    return res.status(201).json(newPost);
+    
+    // Trả về post vừa tạo
+    res.status(201).json(newPost);
+    
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-// PUT /api/posts/:id - Cập nhật bài viết theo id
+// 5. PUT /api/posts/:id - Cập nhật post
 export const updatePost = (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const post = posts.find((p) => p.id === id);
-    if (!post) return res.status(404).json({ error: "Post not found" });
-
-    const { title, content } = req.body || {};
-    post.title = title ?? post.title;
-    post.content = content ?? post.content;
-    return res.json(post);
+    const id = parseInt(req.params.id);
+    const post = posts.find(p => p.id === id);
+    
+    if (!post) {
+      return res.status(404).json({ error: "Không tìm thấy bài viết" });
+    }
+    
+    // Cập nhật dữ liệu
+    const { title, content } = req.body;
+    if (title) post.title = title;
+    if (content) post.content = content;
+    
+    res.json(post);
+    
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-// DELETE /api/posts/:id - Xóa bài viết theo id
+// 6. DELETE /api/posts/:id - Xóa post
 export const deletePost = (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const index = posts.findIndex((p) => p.id === id);
-    if (index === -1) return res.status(404).json({ error: "Post not found" });
+    const id = parseInt(req.params.id);
+    const index = posts.findIndex(p => p.id === id);
+    
+    if (index === -1) {
+      return res.status(404).json({ error: "Không tìm thấy bài viết" });
+    }
+    
+    // Xóa post
     posts.splice(index, 1);
-    return res.json({ success: true });
+    
+    res.json({ success: true, message: "Xóa thành công" });
+    
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Lỗi server" });
   }
 };
-
-// Alias để tương thích với code hiện tại
-export const getAllPosts = getPosts;
-export const createPost = addPost;

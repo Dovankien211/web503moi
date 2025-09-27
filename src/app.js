@@ -1,29 +1,29 @@
+// 1. Import các thư viện cần thiết
 import express from "express";
 import morgan from "morgan";
 
-import postRouter from "./routers/post";
-import userRouter from "./routers/user";
-import productRouter from "./routers/product";
+// 2. Import router
+import postRouter from "./routers/post.js";
 
+// 3. Tạo Express app
 const app = express();
 
-// Dùng morgan để log ở chế độ 'dev'
-app.use(morgan("dev"));
+// 4. Cấu hình middleware
+app.use(morgan("dev"));        // Log requests
+app.use(express.json());       // Parse JSON body
 
-// Middleware tích hợp để parse JSON: req.body
-app.use(express.json());
-
-// localhost":3000
+// 5. Route chính
 app.get("/", (req, res) => {
-  res.send("Hello, chao cac ban: ");
+  res.send("🚀 API Server đang chạy! Truy cập /api/posts để xem danh sách bài viết");
 });
 
+// 6. Mount router
 app.use("/api/posts", postRouter);
 
-app.use("/api/users", userRouter);
-
-app.use("/api/products", productRouter);
-
-app.listen(3000, () => {
-  console.log(`Server is running on port http://localhost:3000`);
+// 7. Khởi động server
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server chạy tại: http://localhost:${PORT}`);
+  console.log(`📝 API Posts: http://localhost:${PORT}/api/posts`);
+  console.log(`🔍 Tìm kiếm: http://localhost:${PORT}/api/posts?search=keyword`);
 });
