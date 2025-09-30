@@ -11,7 +11,13 @@
     "type": "git",
     "url": "git+https://github.com/vanhoa690/nodejs-web503-fall25.git"
   },
-  "keywords": ["nodejs", "express", "api", "posts", "search"],
+  "keywords": [
+    "nodejs",
+    "express",
+    "api",
+    "posts",
+    "search"
+  ],
   "author": "",
   "license": "ISC",
   "type": "module",
