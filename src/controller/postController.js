@@ -1,122 +1,66 @@
-// 1. Dữ liệu giả (thay thế database)
-let posts = [
-  { id: 1, title: "Bài viết 1", content: "Nội dung bài viết 1" },
-  { id: 2, title: "Bài viết 2", content: "Nội dung bài viết 2" },
-  { id: 3, title: "Học Node.js", content: "Hướng dẫn học Node.js từ cơ bản" },
-  { id: 4, title: "Express Framework", content: "Tìm hiểu Express.js cho backend" },
-];
+import Post from "../models/post.model.js";
 
-// 2. GET /api/posts - Lấy danh sách posts (có tìm kiếm)
-export const getPosts = (req, res) => {
+// Lấy danh sách bài viết, có hỗ trợ tìm kiếm
+export const getPosts = async (req, res) => {
   try {
-    // Lấy từ khóa tìm kiếm từ query
     const { search } = req.query;
-    
-    let result = posts;
-    
-    // Nếu có từ khóa tìm kiếm
+    let query = {};
     if (search) {
-      result = posts.filter(post => 
-        post.title.toLowerCase().includes(search.toLowerCase())
-      );
+      query.title = { $regex: search, $options: "i" };
     }
-    
-    // Kiểm tra kết quả
-    if (result.length === 0) {
-      return res.status(404).json({ 
-        error: search ? "Không tìm thấy bài viết phù hợp" : "Không có bài viết nào" 
-      });
+    const posts = await Post.find(query);
+    if (posts.length === 0) {
+      return res.status(404).json({ error: search ? "Không tìm thấy bài viết phù hợp" : "Không có bài viết nào" });
     }
-    
-    // Trả về kết quả
-    res.json(result);
-    
+    res.json(posts);
   } catch (error) {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-// 3. GET /api/posts/:id - Lấy post theo ID
-export const getPostById = (req, res) => {
+// Lấy bài viết theo ID
+export const getPostById = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const post = posts.find(p => p.id === id);
-    
-    if (!post) {
-      return res.status(404).json({ error: "Không tìm thấy bài viết" });
-    }
-    
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: "Không tìm thấy bài viết" });
     res.json(post);
-    
   } catch (error) {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-// 4. POST /api/posts - Tạo post mới
-export const addPost = (req, res) => {
+// Tạo bài viết mới
+export const addPost = async (req, res) => {
   try {
     const { title, content } = req.body;
-    
-    // Kiểm tra dữ liệu đầu vào
     if (!title || !content) {
-      return res.status(400).json({ 
-        error: "Title và content là bắt buộc" 
-      });
+      return res.status(400).json({ error: "Tiêu đề và nội dung là bắt buộc" });
     }
-    
-    // Tạo ID mới
-    const newId = posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1;
-    
-    // Tạo post mới
-    const newPost = { id: newId, title, content };
-    posts.push(newPost);
-    
-    // Trả về post vừa tạo
+    const newPost = new Post({ title, content });
+    await newPost.save();
     res.status(201).json(newPost);
-    
   } catch (error) {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-// 5. PUT /api/posts/:id - Cập nhật post
-export const updatePost = (req, res) => {
+// Cập nhật bài viết
+export const updatePost = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const post = posts.find(p => p.id === id);
-    
-    if (!post) {
-      return res.status(404).json({ error: "Không tìm thấy bài viết" });
-    }
-    
-    // Cập nhật dữ liệu
-    const { title, content } = req.body;
-    if (title) post.title = title;
-    if (content) post.content = content;
-    
-    res.json(post);
-    
+    const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!updatedPost) return res.status(404).json({ error: "Không tìm thấy bài viết" });
+    res.json(updatedPost);
   } catch (error) {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-// 6. DELETE /api/posts/:id - Xóa post
-export const deletePost = (req, res) => {
+// Xóa bài viết
+export const deletePost = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const index = posts.findIndex(p => p.id === id);
-    
-    if (index === -1) {
-      return res.status(404).json({ error: "Không tìm thấy bài viết" });
-    }
-    
-    // Xóa post
-    posts.splice(index, 1);
-    
+    const deletedPost = await Post.findByIdAndDelete(req.params.id);
+    if (!deletedPost) return res.status(404).json({ error: "Không tìm thấy bài viết" });
     res.json({ success: true, message: "Xóa thành công" });
-    
   } catch (error) {
     res.status(500).json({ error: "Lỗi server" });
   }

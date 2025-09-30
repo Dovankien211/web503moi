@@ -1,24 +1,18 @@
-// 1. Import Express Router
 import { Router } from "express";
-
-// 2. Import các controller functions
 import {
   getPosts,
   getPostById,
   addPost,
   updatePost,
-  deletePost
+  deletePost,
 } from "../controller/postController.js";
 
-// 3. Tạo router instance
 const postRouter = Router();
 
-// 4. Định nghĩa các routes
-postRouter.get("/", getPosts);           // GET /api/posts
-postRouter.get("/:id", getPostById);     // GET /api/posts/:id
-postRouter.post("/", addPost);           // POST /api/posts
-postRouter.put("/:id", updatePost);      // PUT /api/posts/:id
-postRouter.delete("/:id", deletePost);   // DELETE /api/posts/:id
+postRouter.get("/", getPosts);
+postRouter.get("/:id", getPostById);
+postRouter.post("/", addPost);
+postRouter.put("/:id", updatePost);
+postRouter.delete("/:id", deletePost);
 
-// 5. Export router
 export default postRouter;
