@@ -4,43 +4,37 @@ const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Tên sản phẩm là bắt buộc"],
       trim: true,
+      maxlength: [200, "Tên sản phẩm không được vượt quá 200 ký tự"],
     },
     description: {
       type: String,
-      required: true,
+      required: [true, "Mô tả sản phẩm là bắt buộc"],
     },
     price: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, "Giá sản phẩm là bắt buộc"],
+      min: [0, "Giá sản phẩm không được âm"],
     },
-    category: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    images: [String],
     stock: {
       type: Number,
+      required: [true, "Số lượng tồn kho là bắt buộc"],
+      min: [0, "Số lượng tồn kho không được âm"],
       default: 0,
-      min: 0,
     },
-    isActive: {
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived"],
+      default: "draft",
+    },
+    featured: {
       type: Boolean,
-      default: true,
+      default: false,
     },
-    images: [{
-      type: String,
-    }],
-    tags: [{
-      type: String,
-      trim: true,
-    }],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true, versionKey: false }
 );
 
 const Product = mongoose.model("Product", productSchema);
