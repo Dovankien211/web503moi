@@ -1,0 +1,136 @@
+Thực hành CRUD với dữ liệu giả trong Node.js/Express (posts)
+
+1) Mục tiêu
+- Hiểu và thực hành CRUD (Create, Read, Update, Delete) trên mảng dữ liệu giả.
+- Viết các endpoint REST cơ bản với mã trạng thái HTTP phù hợp.
+- Làm nền để sau này thay mảng bằng cơ sở dữ liệu thật.
+
+2) Vị trí mã nguồn
+- Router chính: src/routers/post.js
+- Tích hợp router: src/app.js (app.use("/api/posts", postRouter))
+
+3) Dữ liệu giả
+- Dùng mảng trong RAM giả lập bảng bài viết.
+- Mỗi bài viết: id (number), title (string), content (string).
+- Restart server thì dữ liệu trở về trạng thái khởi tạo.
+
+Ví dụ trong src/routers/post.js:
+```javascript
+import { Router } from "express";
+
+const postRouter = Router();
+
+// Dữ liệu giả: danh sách bài viết
+let posts = [
+  { id: 1, title: "Bài viết 1", content: "Nội dung bài viết 1" },
+  { id: 2, title: "Bài viết 2", content: "Nội dung bài viết 2" },
+];
+```
+
+4) Middleware cần thiết
+- Trong src/app.js cần bật parse JSON body từ client (POST/PUT dùng req.body).
+```javascript
+import express from "express";
+import morgan from "morgan";
+
+import postRouter from "./routers/post";
+
+const app = express();
+app.use(morgan("dev"));
+app.use(express.json());
+
+app.use("/api/posts", postRouter);
+
+app.listen(3000, () => {
+  console.log(`Server is running on port http://localhost:3000`);
+});
+```
+
+5) Các endpoint CRUD
+A. READ danh sách: GET /api/posts
+- Trả về toàn bộ mảng posts.
+```javascript
+postRouter.get("/", (req, res) => {
+  return res.json(posts);
+});
+```
+
+B. READ chi tiết: GET /api/posts/:id
+- Lấy id từ req.params (Number), không thấy -> 404.
+```javascript
+postRouter.get("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const post = posts.find((p) => p.id === id);
+  if (!post) return res.status(404).json({ error: "Post not found" });
+  return res.json(post);
+});
+```
+
+C. CREATE: POST /api/posts
+- Nhận { title, content } từ req.body, thiếu -> 400. Tạo id bằng Date.now().
+```javascript
+postRouter.post("/", (req, res) => {
+  const { title, content } = req.body || {};
+
+  if (!title || !content) {
+    return res.status(400).json({ error: "Title and content are required" });
+  }
+
+  const newPost = { id: Date.now(), title, content };
+  posts.push(newPost);
+  return res.status(201).json(newPost);
+});
+```
+
+D. UPDATE: PUT /api/posts/:id
+- Tìm bài theo id; không thấy -> 404. Cập nhật chọn lọc field gửi lên.
+```javascript
+postRouter.put("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const post = posts.find((p) => p.id === id);
+  if (!post) return res.status(404).json({ error: "Post not found" });
+
+  const { title, content } = req.body || {};
+  post.title = title ?? post.title;
+  post.content = content ?? post.content;
+
+  return res.json(post);
+});
+```
+
+E. DELETE: DELETE /api/posts/:id
+- Tìm index theo id; không thấy -> 404. Xóa phần tử và trả kết quả.
+```javascript
+postRouter.delete("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = posts.findIndex((p) => p.id === id);
+  if (index === -1) return res.status(404).json({ error: "Post not found" });
+
+  posts.splice(index, 1);
+  return res.json({ success: true });
+});
+```
+
+6) HTTP status sử dụng
+- 200: Thành công với GET/PUT/DELETE.
+- 201: Tạo mới thành công (POST).
+- 400: Dữ liệu đầu vào không hợp lệ (thiếu trường bắt buộc).
+- 404: Không tìm thấy tài nguyên theo id.
+
+7) Cách test nhanh
+- GET tất cả: GET http://localhost:3000/api/posts
+- Xem chi tiết: GET http://localhost:3000/api/posts/1
+- Thêm mới: POST http://localhost:3000/api/posts
+  Body JSON: { "title": "Bài viết 3", "content": "Nội dung bài viết 3" }
+- Cập nhật: PUT http://localhost:3000/api/posts/1
+  Body JSON: { "title": "Tiêu đề mới" }
+- Xóa: DELETE http://localhost:3000/api/posts/2
+
+8) Gợi ý mở rộng (khi sẵn sàng)
+- Validate nâng cao (trim, min length), middleware lỗi chung.
+- Tách controller/service.
+- Thay mảng posts bằng database (MongoDB/Mongoose, SQL/Prisma...).
+
+Kết luận
+- Đây là CRUD cơ bản với mảng dữ liệu giả cho resource "posts".
+- Khi chuyển sang DB thật, giữ nguyên contract API và thay phần thao tác mảng bằng thao tác DB.

@@ -1,16 +1,34 @@
 {
   "name": "nodejs-web503-fall25",
   "version": "1.0.0",
+<<<<<<< HEAD
   "description": "Chào mừng các em đến với **khóa học Node.js/Express cơ bản!** 👨‍🏫",
   "main": "src/app.js",
   "scripts": {
     "dev": "node src/app.js"
+=======
+  "description": "Node.js/Express API với tìm kiếm posts",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "nodemon --exec babel-node src/app.js",
+    "start": "node src/app.js"
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vanhoa690/nodejs-web503-fall25.git"
   },
+<<<<<<< HEAD
   "keywords": [],
+=======
+  "keywords": [
+    "nodejs",
+    "express",
+    "api",
+    "posts",
+    "search"
+  ],
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
   "author": "",
   "license": "ISC",
   "type": "module",
@@ -20,8 +38,12 @@
   "homepage": "https://github.com/vanhoa690/nodejs-web503-fall25#readme",
   "dependencies": {
     "express": "^5.1.0",
+<<<<<<< HEAD
     "joi": "^18.0.1",
     "mongoose": "^8.18.2",
+=======
+    "mongoose": "^8.18.3",
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
     "morgan": "^1.10.1"
   },
   "devDependencies": {

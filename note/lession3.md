@@ -1,18 +1,31 @@
+<<<<<<< HEAD
 # Buổi 3: MVC, Controller
 
 ## Mục tiêu
 
+=======
+# Buổi 3: MVC, Controller 
+
+## Mục tiêu
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
 - Hiểu mô hình MVC
 - Xây dựng thành phần Controller trong MVC
 - Tìm hiểu phản hồi trạng thái (http) trong Controller
 
 ## Mô hình MVC
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
 - Mô hình MVC (Model - View - Controller) trong Express.js là một cách tổ chức mã nguồn giúp tách biệt rõ ràng giữa:
 
 - Model: quản lý dữ liệu và tương tác với cơ sở dữ liệu.
 
+<<<<<<< HEAD
 - View (Nếu có): hiển thị giao diện thông qua tempalte enigme(Pug, EJS, Handlebars,... ), tuy nhiên trong API không dùng.
+=======
+- View (Nếu có): hiển thị giao diện thông qua tempalte enigme(Pug, EJS, Handlebars,... ),  tuy nhiên trong API không dùng.
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
 
 - Controller: xử lý logic, điều hướng dữ liệu giữa model và view.
 
@@ -21,12 +34,17 @@
 ---
 
 ## Controller:
+<<<<<<< HEAD
 
 - Trong Node.js (đặc biệt là khi sử dụng với framework như Express.js), controller là một phần của kiến trúc MVC (Model - View - Controller).
+=======
+- Trong Node.js (đặc biệt là khi sử dụng với framework như Express.js), controller là một phần của kiến trúc MVC (Model - View - Controller). 
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
 
 - Controller chịu trách nhiệm xử lý logic của yêu cầu (request) và gửi lại phản hồi (response) cho client.
 
 - Những chức năng chính của controller:
+<<<<<<< HEAD
 
   - Nhận và xử lý request từ client (qua route).
   - Gọi các hàm tương tác với database (qua model).
@@ -34,12 +52,21 @@
   - Gửi response (JSON, HTML, trạng thái, v.v.).
 
     ![alt text](../flow-api.png)
+=======
+  + Nhận và xử lý request từ client (qua route).
+  + Gọi các hàm tương tác với database (qua model).
+  + Xử lý dữ liệu, logic nghiệp vụ.
+  + Gửi response (JSON, HTML, trạng thái, v.v.).
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
 
 ### Trạng thái (HTTP Status Codes)
 
 - Là các mã số 3 chữ số mà server gửi về client để thông báo kết quả xử lý một yêu cầu HTTP.
 - HTTP status codes được chia làm 5 nhóm, dựa theo chữ số đầu tiên:
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
 ```
 | Nhóm    | Ý nghĩa                                 | Dải mã  |
 | ------- | --------------------------------------- | ------- |
@@ -51,7 +78,10 @@
 ```
 
 - Một số `HTTP Status Codes` thường gặp:
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
 ```
 | Mã  | Ý nghĩa               | Mô tả ngắn                                    |
 | --- | --------------------- | --------------------------------------------- |
@@ -68,4 +98,8 @@
 
 ```
 
+<<<<<<< HEAD
 ---
+=======
+---
+>>>>>>> 3041184eb43c278195e07d673609e6874d7b5944
