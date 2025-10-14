@@ -7,13 +7,29 @@ export const signup = async (req, res) => {
   const { name, email, password, phone, role } = req.body;
 
   try {
+    // Kiểm tra email đã tồn tại
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(409).json({ message: "Email đã được sử dụng" });
+    }
+
     // Mã hóa mật khẩu
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Lưu người dùng vào cơ sở dữ liệu
     const user = await User.create({ name, email, password: hashedPassword, phone, role });
 
-    res.status(201).json({ message: "User registered successfully", data: user });
+    // Trả về user đã ẩn mật khẩu
+    const safeUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      createdAt: user.createdAt,
+    };
+
+    res.status(201).json({ message: "User registered successfully", data: safeUser });
   } catch (err) {
     res.status(400).json({ message: "Error registering user", error: err.message });
   }
@@ -32,10 +48,17 @@ export const login = async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.status(401).json({ message: "Invalid credentials" });
 
-    // Tạo JWT
-    const token = jwt.sign({ email: user.email, role: user.role }, "yourSecretKey", { expiresIn: "1h" });
+    // Tạo JWT (chứa id để middleware kiểm tra)
+    const token = jwt.sign({ id: user._id, role: user.role }, "yourSecretKey", { expiresIn: "1h" });
 
-    res.json({ token });
+    const safeUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+
+    res.json({ token, user: safeUser });
   } catch (err) {
     res.status(400).json({ message: "Error logging in", error: err.message });
   }
